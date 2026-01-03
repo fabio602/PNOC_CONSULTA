@@ -1,0 +1,5 @@
+{
+  "name": " Consulta PNCP_REV06",
+  "description": "Uma plataforma profissional para consulta, visualização e exportação de dados do PNCP por data de atualização, com suporte a exportação Excel/CSV.",
+  "requestFramePermissions": []
+}
