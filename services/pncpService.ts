@@ -2,7 +2,7 @@
 import { PNCPResponse, FilterParams, PNCPContratacao, PNCPContrato, PNCPItemResultado, PNCPArquivo, PNCPTermoContrato, EmpresaInfo } from '../types';
 import { formatApiDate, cleanCnpj } from '../utils/formatters';
 
-const PROXY_URL = 'https://corsproxy.io/?';
+const PROXY_URL = '';
 const API_BASE = 'https://pncp.gov.br/api/pncp/v1';
 const handlePncpFetch = async (url: string) => {
   const finalUrl = `${PROXY_URL}${encodeURIComponent(url)}`;
