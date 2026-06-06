@@ -2,11 +2,12 @@
 import { PNCPResponse, FilterParams, PNCPContratacao, PNCPContrato, PNCPItemResultado, PNCPArquivo, PNCPTermoContrato, EmpresaInfo } from '../types';
 import { formatApiDate, cleanCnpj } from '../utils/formatters';
 
-const PROXY_URL = 'https://corsproxy.io/?';
-const API_BASE = 'https://pncp.gov.br/api/pncp/v1';
+const API_BASE = '/proxy/pncp/api/pncp/v1';
+const PNCP_CONSULTA_BASE = '/proxy/pncp/api/consulta/v1';
+const EMPRESA_BASE = '/proxy/empresaqui/api/8a15bebd985c4c5f61c0d8015c87a747d6592f6d';
+
 const handlePncpFetch = async (url: string) => {
-  const finalUrl = `${PROXY_URL}${encodeURIComponent(url)}`;
-  const response = await fetch(finalUrl, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: { 'Accept': 'application/json' }
   });
@@ -38,7 +39,7 @@ export const fetchContratos = async (params: FilterParams): Promise<PNCPResponse
     query.append('niFornecedor', cleanCnpj(cnpj));
   }
 
-  const result = await handlePncpFetch(`https://pncp.gov.br/api/consulta/v1/contratos?${query}`);
+  const result = await handlePncpFetch(`${PNCP_CONSULTA_BASE}/contratos?${query}`);
   return {
     data: result.data || [],
     totalPaginas: result.totalPaginas || 0,
@@ -60,10 +61,9 @@ export const fetchArquivosContrato = async (params: FilterParams): Promise<PNCPR
 
 export const fetchEmpresaInfo = async (cnpj: string): Promise<EmpresaInfo> => {
   const safeCnpj = cleanCnpj(cnpj);
-  const url = `https://www.empresaqui.com.br/api/8a15bebd985c4c5f61c0d8015c87a747d6592f6d/${safeCnpj}`;
-  const finalUrl = `${PROXY_URL}${encodeURIComponent(url)}`;
-
-  const response = await fetch(finalUrl, { headers: { 'Accept': 'application/json' } });
+  const response = await fetch(`${EMPRESA_BASE}/${safeCnpj}`, {
+    headers: { 'Accept': 'application/json' }
+  });
   if (!response.ok) throw new Error(`CNPJ ${safeCnpj} não encontrado (${response.status}).`);
 
   const result = await response.json();
@@ -82,10 +82,9 @@ export const downloadArquivoPncp = async (
 ) => {
   const safeCnpj = cleanCnpj(cnpj);
   const target = `${API_BASE}/orgaos/${safeCnpj}/contratos/${ano}/${sequencial}/arquivos/${sequencialDocumento}`;
-  const finalUrl = `${PROXY_URL}${encodeURIComponent(target)}`;
 
   try {
-    const response = await fetch(finalUrl, {
+    const response = await fetch(target, {
       method: 'GET',
       headers: { 'Accept': '*/*' }
     });

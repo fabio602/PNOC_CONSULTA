@@ -8,6 +8,18 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        '/proxy/empresaqui': {
+          target: 'https://www.empresaqui.com.br',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/proxy\/empresaqui/, ''),
+        },
+        '/proxy/pncp': {
+          target: 'https://pncp.gov.br',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/proxy\/pncp/, ''),
+        },
+      },
     },
     plugins: [react()],
     define: {
