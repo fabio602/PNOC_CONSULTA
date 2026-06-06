@@ -2,9 +2,22 @@
 import { PNCPResponse, FilterParams, PNCPContratacao, PNCPContrato, PNCPItemResultado, PNCPArquivo, PNCPTermoContrato, EmpresaInfo } from '../types';
 import { formatApiDate, cleanCnpj } from '../utils/formatters';
 
-const API_BASE = '/proxy/pncp/api/pncp/v1';
-const PNCP_CONSULTA_BASE = '/proxy/pncp/api/consulta/v1';
-const EMPRESA_BASE = '/proxy/empresaqui/api/8a15bebd985c4c5f61c0d8015c87a747d6592f6d';
+const IS_DEV = import.meta.env.DEV;
+const EMPRESA_KEY = '8a15bebd985c4c5f61c0d8015c87a747d6592f6d';
+
+// Em desenvolvimento usa o proxy do Vite; em produção usa proxy.php
+const pncpUrl  = (path: string, qs = '') =>
+  IS_DEV
+    ? `/proxy/pncp/${path}${qs ? '?' + qs : ''}`
+    : `/proxy.php?service=pncp&path=${encodeURIComponent('/' + path)}${qs ? '&' + qs : ''}`;
+
+const empresaUrl = (cnpj: string) =>
+  IS_DEV
+    ? `/proxy/empresaqui/api/${EMPRESA_KEY}/${cnpj}`
+    : `/proxy.php?service=empresa&path=${encodeURIComponent('/api/' + EMPRESA_KEY + '/' + cnpj)}`;
+
+const API_BASE          = IS_DEV ? '/proxy/pncp/api/pncp/v1'      : null;
+const PNCP_CONSULTA_BASE = IS_DEV ? '/proxy/pncp/api/consulta/v1' : null;
 
 const handlePncpFetch = async (url: string) => {
   const response = await fetch(url, {
@@ -39,7 +52,7 @@ export const fetchContratos = async (params: FilterParams): Promise<PNCPResponse
     query.append('niFornecedor', cleanCnpj(cnpj));
   }
 
-  const result = await handlePncpFetch(`${PNCP_CONSULTA_BASE}/contratos?${query}`);
+  const result = await handlePncpFetch(pncpUrl('api/consulta/v1/contratos', query.toString()));
   return {
     data: result.data || [],
     totalPaginas: result.totalPaginas || 0,
@@ -53,15 +66,14 @@ export const fetchArquivosContrato = async (params: FilterParams): Promise<PNCPR
   if (!cnpj || !ano || !sequencial) throw new Error("Parâmetros de busca são obrigatórios.");
 
   const safeCnpj = cleanCnpj(cnpj);
-  const url = `${API_BASE}/orgaos/${safeCnpj}/contratos/${ano}/${sequencial}/arquivos`;
-  const result = await handlePncpFetch(url);
+  const result = await handlePncpFetch(pncpUrl(`api/pncp/v1/orgaos/${safeCnpj}/contratos/${ano}/${sequencial}/arquivos`));
   const data = Array.isArray(result) ? result : (result.data || []);
   return { data, totalPaginas: 1, totalRegistros: data.length, numeroPagina: 1 };
 };
 
 export const fetchEmpresaInfo = async (cnpj: string): Promise<EmpresaInfo> => {
   const safeCnpj = cleanCnpj(cnpj);
-  const response = await fetch(`${EMPRESA_BASE}/${safeCnpj}`, {
+  const response = await fetch(empresaUrl(safeCnpj), {
     headers: { 'Accept': 'application/json' }
   });
   if (!response.ok) throw new Error(`CNPJ ${safeCnpj} não encontrado (${response.status}).`);
@@ -81,7 +93,7 @@ export const downloadArquivoPncp = async (
   urlOriginal?: string
 ) => {
   const safeCnpj = cleanCnpj(cnpj);
-  const target = `${API_BASE}/orgaos/${safeCnpj}/contratos/${ano}/${sequencial}/arquivos/${sequencialDocumento}`;
+  const target = pncpUrl(`api/pncp/v1/orgaos/${safeCnpj}/contratos/${ano}/${sequencial}/arquivos/${sequencialDocumento}`);
 
   try {
     const response = await fetch(target, {
