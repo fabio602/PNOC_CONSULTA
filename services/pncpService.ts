@@ -3,7 +3,7 @@ import { PNCPResponse, FilterParams, PNCPContratacao, PNCPContrato, PNCPItemResu
 import { formatApiDate, cleanCnpj } from '../utils/formatters';
 
 const IS_DEV = import.meta.env.DEV;
-const EMPRESA_KEY = '8a15bebd985c4c5f61c0d8015c87a747d6592f6d';
+const EMPRESA_KEY = 'b7650fe8bd086f1d7c0d978f82e7e066594379d1';
 
 // Em desenvolvimento usa o proxy do Vite; em produção usa proxy.php
 const pncpUrl  = (path: string, qs = '') =>
